@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-6 py-12">
+    <div class="space-y-8">
+        <div class="flex items-center justify-between">
+            <h1 class="text-5xl font-black text-gray-900 tracking-tighter uppercase italic">Active Payload</h1>
+            <button onclick="clearCart()" class="text-[10px] font-black text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors">Abort All Units</button>
+        </div>
+
+        <div id="cart-items" class="space-y-4">
+            <!-- Items will be injected by JS -->
+            <div class="text-center py-20 text-gray-400 font-medium italic">Scanning for active units...</div>
+        </div>
+
+        <div id="cart-summary" class="hidden bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl space-y-8">
+            <div class="space-y-4">
+                <div class="flex justify-between text-gray-400 font-bold uppercase text-[10px] tracking-widest">
+                    <span>Base Value</span>
+                    <span id="subtotal">₹0</span>
+                </div>
+                <div class="flex justify-between text-gray-400 font-bold uppercase text-[10px] tracking-widest">
+                    <span>Tactical Deployment</span>
+                    <span>₹40</span>
+                </div>
+                <div class="h-px bg-gray-100"></div>
+                <div class="flex justify-between text-2xl font-black text-gray-900 tracking-tighter uppercase">
+                    <span>Total Manifest</span>
+                    <span id="total">₹0</span>
+                </div>
+            </div>
+
+            <form action="{% url 'checkout' %}" method="POST" id="checkout-form">
+                {% csrf_token %}
+                <input type="hidden" name="cart_data" id="cart-data-input">
+                
+                <div class="space-y-6 mb-8">
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] pl-1">Primary Arrival Coordinates</label>
+                        <textarea name="address" required class="w-full bg-gray-50 border border-gray-100 rounded-[1.5rem] px-6 py-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all min-h-[100px]" placeholder="Enter full delivery coordinates...">{{ user.address }}</textarea>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] pl-1">Comm-Link Number</label>
+                        <input type="text" name="phone" required value="{{ user.phone }}" class="w-full bg-gray-50 border border-gray-100 rounded-[1.5rem] px-6 py-4 text-sm font-bold focus:outline-none focus:ring-4 focus:ring-orange-100 transition-all" placeholder="Enter contact digits">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full premium-gradient text-white py-6 rounded-[2rem] text-xl font-black shadow-2xl shadow-orange-100 hover:scale-[1.01] active:scale-95 transition-all uppercase tracking-widest">
+                    Confirm Deployment
+                </button>
+            </form>
+        </div>
+
+        <div id="empty-cart" class="hidden text-center py-32 space-y-6">
+            <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-gray-300 text-4xl italic font-black">?</div>
+            <div class="text-2xl font-black text-gray-300 uppercase tracking-tighter">Manifest is Empty</div>
+            <a href="{% url 'menu_list' %}" class="inline-block px-10 py-4 premium-gradient text-white rounded-full font-black uppercase text-xs tracking-widest">Return to Base</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function renderCart() {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const container = document.getElementById('cart-items');
+        const summary = document.getElementById('cart-summary');
+        const empty = document.getElementById('empty-cart');
+        const input = document.getElementById('cart-data-input');
+
+        if (cart.length === 0) {
+            container.innerHTML = '';
+            summary.classList.add('hidden');
+            empty.classList.remove('hidden');
+            return;
+        }
+
+        empty.classList.add('hidden');
+        summary.classList.remove('hidden');
+        input.value = JSON.stringify(cart);
+
+        let html = '';
+        let subtotal = 0;
+
+        cart.forEach((item, index) => {
+            subtotal += item.price * item.quantity;
+            html += `
+                <div class="flex items-center space-x-6 bg-white p-6 rounded-[2.5rem] border border-gray-100 group">
+                    <img src="${item.image}" class="w-24 h-24 rounded-[1.5rem] object-cover shadow-lg">
+                    <div class="flex-grow space-y-1">
+                        <h3 class="text-xl font-black text-gray-900 tracking-tighter uppercase">${item.name}</h3>
+                        <div class="text-[10px] font-black text-[#ff6b35] uppercase tracking-widest">UNIT PRICE: ₹${item.price}</div>
+                    </div>
+                    <div class="flex items-center space-x-4 bg-gray-50 px-4 py-2 rounded-full border border-gray-100">
+                        <button onclick="updateQty(${index}, -1)" class="w-6 h-6 flex items-center justify-center font-black text-gray-400 hover:text-[#ff6b35]">-</button>
+                        <span class="text-sm font-black text-gray-900">${item.quantity}</span>
+                        <button onclick="updateQty(${index}, 1)" class="w-6 h-6 flex items-center justify-center font-black text-gray-400 hover:text-[#ff6b35]">+</button>
+                    </div>
+                    <div class="text-xl font-black text-gray-900 min-w-[80px] text-right">₹${item.price * item.quantity}</div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+        document.getElementById('subtotal').innerText = '₹' + subtotal;
+        document.getElementById('total').innerText = '₹' + (subtotal + 40);
+    }
+
+    function updateQty(index, delta) {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        cart[index].quantity += delta;
+        if (cart[index].quantity <= 0) {
+            cart.splice(index, 1);
+        }
+        localStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+        updateCartCount();
+    }
+
+    function clearCart() {
+        localStorage.setItem('cart', JSON.stringify([]));
+        renderCart();
+        updateCartCount();
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCart);
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ item.name }} - SavoryNest{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-gray-100">
+        <div class="p-10 premium-gradient text-white flex justify-between items-center">
+            <div>
+                <h1 class="text-4xl font-black tracking-tighter uppercase italic">Recalibrate Entry</h1>
+                <p class="opacity-70 font-medium tracking-wide">Adjusting tactical parameters for: {{ item.name }}</p>
+            </div>
+            <a href="{% url 'menu_management' %}" class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/30 transition-all">
+                <i class="fas fa-times text-xl"></i>
+            </a>
+        </div>
+
+        <form action="{% url 'edit_food_item' item.id %}" method="POST" class="p-10 space-y-8">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#ff6b35]">Item Designation</label>
+                    <input type="text" name="name" value="{{ item.name }}" required class="w-full px-8 py-5 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-[#ff6b35] transition-all font-bold">
+                </div>
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#ff6b35]">Category Segment</label>
+                    <select name="category" class="w-full px-8 py-5 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-[#ff6b35] transition-all font-bold">
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if cat.id == item.category.id %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#ff6b35]">Price Unit (INR)</label>
+                    <input type="number" name="price" value="{{ item.price|floatformat:0 }}" required class="w-full px-8 py-5 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-[#ff6b35] transition-all font-bold">
+                </div>
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#ff6b35]">Prep Time (MINS)</label>
+                    <input type="number" name="prep_time" value="{{ item.prep_time }}" required class="w-full px-8 py-5 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-[#ff6b35] transition-all font-bold">
+                </div>
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-[#ff6b35]">Availability Status</label>
+                    <div class="flex items-center h-[64px] px-8 bg-gray-50 rounded-2xl">
+                        <input type="checkbox" name="is_available" id="is_available" {% if item.is_available %}checked{% endif %} class="w-6 h-6 text-[#ff6b35] border-gray-300 rounded focus:ring-[#ff6b35]">
+                        <label for="is_available" class="ml-3 text-xs font-black uppercase tracking-widest text-gray-400">In Stock</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <label class="text-[10px] font-black uppercase tracking-widest text-[#ff6b35]">Visual Asset URL</label>
+                <input type="url" name="image_url" value="{{ item.image_url }}" class="w-full px-8 py-5 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-[#ff6b35] transition-all font-bold">
+            </div>
+
+            <div class="space-y-3">
+                <label class="text-[10px] font-black uppercase tracking-widest text-[#ff6b35]">Briefing Description</label>
+                <textarea name="description" rows="4" class="w-full px-8 py-5 bg-gray-50 border-0 rounded-2xl focus:ring-2 focus:ring-[#ff6b35] transition-all font-bold">{{ item.description }}</textarea>
+            </div>
+
+            <div class="flex items-center space-x-3 p-6 bg-orange-50 rounded-3xl border border-orange-100">
+                <input type="checkbox" name="is_veg" id="is_veg" {% if item.is_veg %}checked{% endif %} class="w-6 h-6 text-[#ff6b35] border-gray-300 rounded focus:ring-[#ff6b35]">
+                <label for="is_veg" class="text-sm font-black uppercase tracking-tight text-orange-900">Vegetarian Protocol Active</label>
+            </div>
+
+            <div class="pt-6 flex gap-4">
+                <a href="{% url 'menu_management' %}" class="flex-1 px-10 py-6 rounded-3xl border-2 border-gray-100 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 text-center hover:bg-gray-50 transition-all mt-auto mb-auto">
+                    Abort Changes
+                </a>
+                <button type="submit" class="flex-[2] premium-gradient text-white py-6 rounded-3xl font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-orange-500/20 hover:scale-[1.02] active:scale-95 transition-all">
+                    Apply Modifications
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

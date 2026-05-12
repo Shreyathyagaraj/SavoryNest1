@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12">
+        <div class="space-y-2">
+            <h1 class="text-6xl font-black text-gray-900 tracking-tighter uppercase italic">The Manifest</h1>
+            <p class="text-gray-400 font-medium uppercase text-xs tracking-widest">Available tactical culinary units</p>
+        </div>
+
+        <div class="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
+            <a href="{% url 'menu_list' %}" class="px-6 py-3 rounded-full border-2 {% if not current_category %}bg-gray-900 text-white border-gray-900{% else %}bg-white text-gray-400 border-gray-100 hover:border-orange-200{% endif %} transition-all">All Units</a>
+            {% for category in categories %}
+            <a href="{% url 'menu_list' %}?category={{ category.slug }}" class="px-6 py-3 rounded-full border-2 {% if current_category == category.slug %}bg-gray-900 text-white border-gray-900{% else %}bg-white text-gray-400 border-gray-100 hover:border-orange-200{% endif %} transition-all">{{ category.name }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for item in items %}
+        <div class="group relative bg-white rounded-[3rem] p-8 space-y-6 hover:shadow-2xl hover:shadow-orange-100 transition-all border border-gray-100">
+            <!-- Admin Controls -->
+            {% if user.is_authenticated and user.is_restaurant_admin %}
+            <div class="absolute top-6 right-6 z-10 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <form action="{% url 'delete_food_item' item.id %}" method="POST" onsubmit="return confirm('Abort this mission item?');">
+                    {% csrf_token %}
+                    <button type="submit" class="w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <div class="aspect-[4/3] w-full rounded-[2.5rem] overflow-hidden shadow-lg group-hover:scale-[1.02] transition-transform relative">
+                <img src="{{ item.image_url }}" alt="{{ item.name }}" class="w-full h-full object-cover">
+                <!-- Badges -->
+                <div class="absolute bottom-4 left-4 flex space-x-2">
+                    <span class="px-3 py-1 bg-white/90 backdrop-blur-md rounded-full text-[8px] font-black uppercase tracking-widest flex items-center">
+                        <span class="w-2 h-2 rounded-full mr-2 {% if item.is_veg %}bg-green-500{% else %}bg-red-500{% endif %}"></span>
+                        {% if item.is_veg %}Veg{% else %}Non-Veg{% endif %}
+                    </span>
+                    <span class="px-3 py-1 bg-black/80 backdrop-blur-md text-white rounded-full text-[8px] font-black uppercase tracking-widest flex items-center">
+                        <i class="fas fa-star text-orange-400 mr-2"></i> {{ item.rating }}
+                    </span>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-[#ff6b35]">
+                    <span>{{ item.category.name }}</span>
+                    <span><i class="fas fa-hourglass-half mr-2"></i>{{ item.prep_time }} MINS</span>
+                </div>
+                <h3 class="text-2xl font-black text-gray-900 tracking-tighter uppercase">{{ item.name }}</h3>
+                <p class="text-sm text-gray-400 leading-relaxed">{{ item.description }}</p>
+            </div>
+            <div class="flex justify-between items-center pt-6">
+                <div class="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">₹{{ item.price }}</div>
+                <button onclick="addToCart({{ item.id }}, '{{ item.name|escapejs }}', {{ item.price }}, '{{ item.image_url|escapejs }}')" class="w-16 h-16 premium-gradient rounded-[1.5rem] flex items-center justify-center text-white text-2xl shadow-xl hover:scale-110 active:scale-90 transition-all">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-32 text-center text-gray-300 font-black uppercase text-2xl italic">
+            No units found in this sector.
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function addToCart(id, name, price, image) {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const existing = cart.find(item => item.id === id);
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.push({ id, name, price, image, quantity: 1 });
+        }
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartCount();
+    }
+</script>
+{% endblock %}

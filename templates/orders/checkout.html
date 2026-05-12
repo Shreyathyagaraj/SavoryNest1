@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-xl mx-auto px-6 py-24 text-center space-y-12">
+    <div class="w-32 h-32 premium-gradient rounded-[3rem] flex items-center justify-center mx-auto shadow-2xl animate-pulse">
+        <i class="fas fa-shield-alt text-white text-5xl"></i>
+    </div>
+    
+    <div class="space-y-4">
+        <h1 class="text-5xl font-black text-gray-900 tracking-tighter uppercase italic">Secure Uplink</h1>
+        <p class="text-gray-400 font-medium uppercase text-xs tracking-[0.3em]">Establishing encrypted payment tunnel...</p>
+    </div>
+
+    <div class="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl space-y-6">
+        <div class="flex justify-between items-center text-sm font-bold uppercase tracking-widest text-gray-400">
+            <span>Manifest ID</span>
+            <span class="text-gray-900">#{{ order.id }}</span>
+        </div>
+        <div class="h-px bg-gray-100"></div>
+        <div class="flex justify-between items-center text-2xl font-black text-gray-900 uppercase">
+            <span>Total Value</span>
+            <span>₹{{ order.total_amount }}</span>
+        </div>
+
+        <button id="rzp-button1" class="w-full premium-gradient text-white py-6 rounded-[2rem] text-xl font-black shadow-2xl hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
+            Authorize Payment
+        </button>
+    </div>
+</div>
+
+<form action="{% url 'payment_verify' %}" method="POST" id="verify-form" class="hidden">
+    {% csrf_token %}
+    <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+    <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
+    <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var options = {
+        "key": "{{ razorpay_key }}",
+        "amount": "{{ amount }}",
+        "currency": "INR",
+        "name": "Gusto Tactical",
+        "description": "Culinary Payload Authorization",
+        "image": "https://cdn-icons-png.flaticon.com/512/3075/3075977.png",
+        "order_id": "{{ razorpay_order_id }}",
+        "handler": function (response){
+            document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+            document.getElementById('razorpay_order_id').value = response.razorpay_order_id;
+            document.getElementById('razorpay_signature').value = response.razorpay_signature;
+            
+            // Clear local cart on success
+            localStorage.setItem('cart', '[]');
+            
+            // Submit the verification form
+            fetch("{% url 'payment_verify' %}", {
+                method: 'POST',
+                body: new FormData(document.getElementById('verify-form')),
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            }).then(res => res.json()).then(data => {
+                if(data.status === 'success') {
+                    window.location.href = "{url 'order_success' %}";
+                } else {
+                    alert("Authorization Voided. Protocol Failure.");
+                }
+            });
+        },
+        "prefill": {
+            "name": "{{ user.get_full_name }}",
+            "email": "{{ user.email }}",
+            "contact": "{{ user.phone }}"
+        },
+        "theme": {
+            "color": "#ff6b35"
+        }
+    };
+    var rzp1 = new Razorpay(options);
+    document.getElementById('rzp-button1').onclick = function(e){
+        rzp1.open();
+        e.preventDefault();
+    }
+    
+    // Auto-open on load
+    window.onload = function() {
+        // rzp1.open(); 
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <!-- Sidebar: Identity Info -->
+        <div class="lg:col-span-1 space-y-8">
+            <div class="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl space-y-8">
+                <div class="text-center space-y-4">
+                    <div class="w-32 h-32 rounded-full premium-gradient mx-auto border-4 border-white shadow-2xl flex items-center justify-center text-white text-5xl font-black italic">
+                        {{ user.username.0|upper }}
+                    </div>
+                    <div class="space-y-1">
+                        <h2 class="text-3xl font-black text-gray-900 tracking-tighter uppercase italic">{{ user.username }}</h2>
+                        <p class="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em]">Operator Assigned</p>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="space-y-1">
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Comm-Link</div>
+                        <div class="text-sm font-bold text-gray-900">{{ user.email }}</div>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tactical Phore</div>
+                        <div class="text-sm font-bold text-gray-900">{{ user.phone|default:"Not established" }}</div>
+                    </div>
+                </div>
+
+                <a href="{% url 'logout' %}" class="block w-full py-4 text-center border-2 border-gray-100 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest text-red-400 hover:border-red-400 transition-all">
+                    Deauthorize Session
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content: Orders & Edit -->
+        <div class="lg:col-span-2 space-y-12">
+            <div class="space-y-6">
+                <h2 class="text-4xl font-black text-gray-900 tracking-tighter uppercase italic">Mission History</h2>
+                <div class="space-y-4">
+                    {% for order in orders %}
+                    <div class="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-lg flex items-center justify-between group hover:border-orange-200 transition-all">
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl font-black text-gray-900 uppercase">#{{ order.id }}</span>
+                                <span class="px-3 py-1 bg-orange-50 text-[10px] font-black text-[#ff6b35] rounded-full uppercase tracking-widest">{{ order.get_status_display }}</span>
+                            </div>
+                            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">{{ order.created_at|date:"d M Y // H:i" }}</div>
+                        </div>
+                        <div class="text-right space-y-1">
+                            <div class="text-2xl font-black text-gray-900">₹{{ order.total_amount }}</div>
+                            <a href="{% url 'order_detail' order.id %}" class="text-[10px] font-black text-[#ff6b35] uppercase tracking-widest hover:underline">View Tracking</a>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-20 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-100 italic text-gray-400">
+                        No prior missions recorded.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Profile Update Form -->
+            <div class="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl space-y-8">
+                <h3 class="text-2xl font-black text-gray-900 tracking-tighter uppercase italic">Update Identity</h3>
+                <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {% csrf_token %}
+                    {% for field in form %}
+                    <div class="space-y-2 {% if field.name == 'address' %}md:col-span-2{% endif %}">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-1">{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="md:col-span-2 premium-gradient text-white py-5 rounded-[2rem] text-lg font-black shadow-2xl shadow-orange-100 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">
+                        Sync Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input, textarea {
+        display: block !important;
+        width: 100% !important;
+        background-color: rgb(249 250 251) !important;
+        border-width: 1px !important;
+        border-color: rgb(243 244 246) !important;
+        border-radius: 1.5rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        font-size: 0.875rem !important;
+        line-height: 1.25rem !important;
+        font-weight: 700 !important;
+    }
+</style>
+{% endblock %}

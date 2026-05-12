@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-6 py-24">
+    <div class="bg-white rounded-[4rem] p-12 border border-gray-100 shadow-2xl space-y-10">
+        <div class="space-y-4 text-center">
+            <h1 class="text-4xl font-black text-gray-900 tracking-tighter uppercase">Enlist</h1>
+            <p class="text-gray-400 font-medium uppercase text-xs tracking-widest">Create tactical profile</p>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] pl-1">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <p class="text-xs text-red-500 font-bold uppercase tracking-widest">{{ field.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="w-full premium-gradient text-white py-5 rounded-[2rem] text-lg font-black shadow-2xl shadow-orange-100 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest mt-4">
+                Establish Identity
+            </button>
+        </form>
+
+        <div class="text-center pt-4">
+            <p class="text-gray-400 text-xs font-bold uppercase tracking-widest">Existing Profile? <a href="{% url 'login' %}" class="text-[#ff6b35] hover:underline">Login</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+    input, textarea {
+        display: block !important;
+        width: 100% !important;
+        background-color: rgb(249 250 251) !important;
+        border-width: 1px !important;
+        border-color: rgb(243 244 246) !important;
+        border-radius: 1.5rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        font-size: 0.875rem !important;
+        line-height: 1.25rem !important;
+        font-weight: 700 !important;
+    }
+    input:focus, textarea:focus {
+        outline: 2px solid transparent !important;
+        outline-offset: 2px !important;
+        --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color) !important;
+        --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(4px + var(--tw-ring-offset-width)) rgb(255 247 237) !important;
+        box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000) !important;
+    }
+</style>
+{% endblock %}
